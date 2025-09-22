@@ -1,0 +1,67 @@
+﻿# Build results
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Visual Studio
+.vs/
+*/.vs/	
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code and IntelliSense files
+*.db
+*.db-shm
+*.db-wal
+**/CopilotIndices/
+**/FileContentIndex/
+
+# Visual Studio Solution User Options
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+*.psmdcp
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Windows specific
+Thumbs.db
+Desktop.ini
+
+# Resharper / Rider
+_ReSharper*/
+*.DotSettings.user
+
+# Others
+*.cache
+*.log
+*.tmp
+*.bak
+*.swp
+*.vsidx
+
+# Test results
+TestResult*/
+*.trx
+*.coverage
+*.coveragexml
+
+# Publish outputs
+publish/
+*.Publish.xml
+
+# Visual Studio layout files
+*.json

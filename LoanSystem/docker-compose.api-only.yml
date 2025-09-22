@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  # Credit Scoring API (LightGBM FastAPI) - Chỉ service này chạy trong Docker
+  credit-scoring-api:
+    build: ./credit-scoring-api
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL_PATH=/app/models/lightgbm_model.txt
+      - DECISION_THRESHOLD=0.5
+    volumes:
+      - ./credit-scoring-api:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

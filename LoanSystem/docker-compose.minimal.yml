@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: LoanSystem
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Ngan0407@!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Credit Scoring API (LightGBM FastAPI) - Chỉ service này chạy trong Docker
+  credit-scoring-api:
+    build: ./credit-scoring-api
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL_PATH=/app/models/lightgbm_model.txt
+      - DECISION_THRESHOLD=0.5
+    volumes:
+      - ./credit-scoring-api:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:

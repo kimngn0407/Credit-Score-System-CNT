@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: LoanSystem
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Ngan0407@!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Credit Scoring API (LightGBM FastAPI)
+  credit-scoring-api:
+    build: ./credit-scoring-api
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL_PATH=/app/models/lightgbm_model.txt
+      - DECISION_THRESHOLD=0.5
+    volumes:
+      - ./credit-scoring-api:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Credit NLG Service (LLM FastAPI)
+  credit-nlg-service:
+    build: ./credit-nlg-service
+    ports:
+      - "8002:8000"
+    environment:
+      - BASE_MODEL=unsloth/gpt-oss-20b-unsloth-bnb-4bit
+      - ADAPTER_PATH=/app/llm_adapter
+      - GEN_MAX_NEW_TOKENS=400
+      - GEN_TEMPERATURE=0.2
+      - NLG_API_KEY=your-secret-key
+    volumes:
+      - ./credit-nlg-service:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+
+  # Loan System (Spring Boot)
+  loan-system:
+    build: ./LoanSystem
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/LoanSystem
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=Ngan0407@!
+      - CREDIT_SCORING_API_URL=http://credit-scoring-api:8000
+      - CREDIT_NLG_API_URL=http://credit-nlg-service:8000
+      - CREDIT_NLG_API_KEY=your-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+      credit-scoring-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend (React + Vite)
+  frontend:
+    build: ./LoanSystem_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api
+    volumes:
+      - ./LoanSystem_frontend:/app
+      - /app/node_modules
+    depends_on:
+      loan-system:
+        condition: service_healthy
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+
+volumes:
+  postgres_data:
+
